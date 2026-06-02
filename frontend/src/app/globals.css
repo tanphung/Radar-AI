@@ -84,37 +84,38 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Brand palette per BUILD_PLAN — dark mode default for the app */
+  --background: #0f1419;
+  --foreground: #f9fafb;
+  --card: #1a1f2e;
+  --card-foreground: #f9fafb;
+  --popover: #1a1f2e;
+  --popover-foreground: #f9fafb;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #1a1f2e;
+  --secondary-foreground: #f9fafb;
+  --muted: #1a1f2e;
+  --muted-foreground: #9ca3af;
+  --accent: #1a1f2e;
+  --accent-foreground: #f9fafb;
+  --destructive: #ef4444;
+  --border: #2a2f3e;
+  --input: #2a2f3e;
+  --ring: #3b82f6;
+  --chart-1: #3b82f6;
+  --chart-2: #22c55e;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #8b5cf6;
+  --sidebar: #0f1419;
+  --sidebar-foreground: #f9fafb;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1a1f2e;
+  --sidebar-accent-foreground: #f9fafb;
+  --sidebar-border: #2a2f3e;
+  --sidebar-ring: #3b82f6;
 }
 
 @layer base {
@@ -123,6 +124,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Tabular numerals so prices and percentages do not jitter on update */
+    font-variant-numeric: tabular-nums;
   }
   html {
     @apply font-sans;
