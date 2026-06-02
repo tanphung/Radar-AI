@@ -686,3 +686,30 @@ JWT_SECRET=
 ## 15. Changelog plan
 
 - 2026-06-02: bản đầu, chốt 10 phase và cấu trúc thư mục.
+- 2026-06-02: Phase 0 + 1 hoàn tất.
+  - Contract `contracts/crypto_oracle.py` — 12 method (7 view + 5 write), pinned
+    hash `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6`.
+  - `genvm-lint check ... --json` → `ok:true`.
+  - `genlayer.toml` chưa tạo — dời sang Phase 9 (deploy) vì CLI không bắt buộc.
+
+### Known setup gotcha — genvm-linter v0.10.0 vs GenVM v0.3.0-rc
+
+Linter tự fetch GitHub release "latest" và tìm asset tên `genvm-universal.tar.xz`,
+nhưng release v0.3.0-rc* đã đổi tên asset thành `genvm-runners-all.tar.xz`. Trên
+máy mới sẽ thấy:
+
+```
+{"validate":{"errors":[{"code":"E101","msg":"Failed to load SDK: HTTP 404"}]}}
+```
+
+Workaround (cho đến khi linter ra bản fix):
+
+```bash
+mkdir -p ~/.cache/genvm-linter
+LATEST=$(curl -sI https://github.com/genlayerlabs/genvm/releases/latest | \
+  grep -i ^location | awk -F/ '{print $NF}' | tr -d '\r')
+curl -sL -o ~/.cache/genvm-linter/genvm-universal-$LATEST.tar.xz \
+  https://github.com/genlayerlabs/genvm/releases/download/v0.2.16/genvm-universal.tar.xz
+```
+
+Tarball v0.2.16 chứa runner hash đang pin nên SDK validate chạy được.
