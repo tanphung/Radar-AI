@@ -698,6 +698,21 @@ JWT_SECRET=
     `genvm-universal-v0.2.16.tar.xz` sang. Workaround tương tự linter (xem dưới).
   - `mock_llm` accumulate chứ không override — phải gọi `direct_vm.clear_mocks()`
     trước khi mock response mới với cùng matcher.
+- 2026-06-03: Phase 3 hoàn tất.
+  - `frontend/` — Next.js **16.2.7** + React 19.2 + Tailwind 4 + shadcn (radix preset).
+    Tên scaffold ghi Next 15 trong plan ban đầu, thực tế create-next-app pull bản 16.
+  - shadcn components đã cài: chỉ `button` + `input` (Phase 3 layout cần). Các
+    component khác (`card`, `badge`, `dialog`, `dropdown-menu`, `skeleton`, `tabs`,
+    `tooltip`, `toast`) dời sang phase tiêu thụ thật sự — tránh deps thừa.
+  - npm deps dời theo phase: `zustand`+`react-query` ở Phase 4; `genlayer-js`+
+    `lightweight-charts` ở Phase 5; `viem`+`siwe`+`@supabase/supabase-js` ở Phase 6.
+  - Font: giữ Geist (đã wire sẵn bởi scaffold) thay vì Inter — Plan §4.3 cho phép.
+  - Brand palette override trong `.dark` của `globals.css` đúng spec BUILD_PLAN.
+  - `tabular-nums` global cho mọi số.
+  - `layout.tsx` import Sidebar/TopBar/MobileNav — không có component orphan.
+  - `nav-items.ts` chung cho Sidebar + MobileNav — không duplicate truth.
+  - Exit gate: `npx tsc --noEmit` 0 lỗi; `curl /` 200 + markers; `/watchlist` 404
+    nhưng layout vẫn render.
 
 ### Known setup gotcha — genvm-linter v0.10.0 vs GenVM v0.3.0-rc
 
