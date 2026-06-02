@@ -691,6 +691,13 @@ JWT_SECRET=
     hash `py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6`.
   - `genvm-lint check ... --json` → `ok:true`.
   - `genlayer.toml` chưa tạo — dời sang Phase 9 (deploy) vì CLI không bắt buộc.
+- 2026-06-02: Phase 2 hoàn tất.
+  - `tests/direct/test_crypto_oracle.py` — 22 test, pass <1s.
+  - `tests/conftest.py` — Windows tempfile cleanup autouse fixture.
+  - `gltest` dùng cache riêng `~/.cache/gltest-direct/`, đã copy tarball
+    `genvm-universal-v0.2.16.tar.xz` sang. Workaround tương tự linter (xem dưới).
+  - `mock_llm` accumulate chứ không override — phải gọi `direct_vm.clear_mocks()`
+    trước khi mock response mới với cùng matcher.
 
 ### Known setup gotcha — genvm-linter v0.10.0 vs GenVM v0.3.0-rc
 
@@ -713,3 +720,14 @@ curl -sL -o ~/.cache/genvm-linter/genvm-universal-$LATEST.tar.xz \
 ```
 
 Tarball v0.2.16 chứa runner hash đang pin nên SDK validate chạy được.
+
+Tương tự cho `gltest` (test runner):
+
+```bash
+mkdir -p ~/.cache/gltest-direct
+cp ~/.cache/genvm-linter/genvm-universal-v0.2.16.tar.xz \
+   ~/.cache/gltest-direct/genvm-universal-v0.2.16.tar.xz
+```
+
+Trong test file: `SDK_VERSION = "v0.2.16"` và truyền `sdk_version=SDK_VERSION`
+vào `direct_deploy()`.
