@@ -1,11 +1,10 @@
 "use client";
 
-import { LogOut, Search, Wallet } from "lucide-react";
+import { LogOut, Wallet } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { AlertBell } from "@/components/alerts/AlertBell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { buildSiweMessage } from "@/lib/auth/siwe";
 import { useWatchlistStore } from "@/lib/store/watchlistStore";
 import {
@@ -130,19 +129,7 @@ export function TopBar() {
   }, [resetWatchlist]);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
-      <div className="relative flex-1 max-w-md">
-        <Search
-          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-          aria-hidden
-        />
-        <Input
-          type="search"
-          placeholder="Search coin by name or symbol"
-          aria-label="Search coin"
-          className="pl-9"
-        />
-      </div>
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-end gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
       <AlertBell />
       {address ? (
         <Button
