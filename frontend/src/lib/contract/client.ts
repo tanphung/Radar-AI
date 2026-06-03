@@ -8,6 +8,8 @@ import {
   testnetBradbury,
 } from "genlayer-js/chains";
 
+import { getInjectedProvider } from "@/lib/wallet/provider";
+
 // Public env vars are baked into the bundle at build time. Read once.
 const RAW_NETWORK = (
   process.env.NEXT_PUBLIC_GENLAYER_NETWORK ?? "studionet"
@@ -46,11 +48,14 @@ export function getReadClient() {
 }
 
 /**
- * Write-capable client. Requires a browser wallet provider (window.ethereum).
- * The caller must already have requested accounts; Phase 6 TopBar handles that.
+ * Write-capable client. Requires a browser wallet provider. Resolves through
+ * EIP-6963 discovery so OKX / Rabby / Coinbase work even when window.ethereum
+ * is held by a different wallet. The caller must already have requested
+ * accounts; Phase 6 TopBar handles that.
  */
 export function getWriteClient() {
-  if (typeof window === "undefined" || !window.ethereum) {
+  const provider = getInjectedProvider();
+  if (!provider) {
     throw new Error(
       "No wallet provider — connect a wallet from the top bar first",
     );
@@ -59,7 +64,7 @@ export function getWriteClient() {
   // src/types/ethereum.d.ts; the cast keeps TS happy across the boundary.
   return createClient({
     chain: resolveChain(),
-    provider: window.ethereum as unknown as Parameters<
+    provider: provider as unknown as Parameters<
       typeof createClient
     >[0] extends { provider?: infer P }
       ? P

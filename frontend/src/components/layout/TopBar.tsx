@@ -8,6 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { buildSiweMessage } from "@/lib/auth/siwe";
 import { useWatchlistStore } from "@/lib/store/watchlistStore";
+import {
+  getInjectedProvider,
+  isWalletInstalled,
+  subscribeToWalletDiscovery,
+} from "@/lib/wallet/provider";
 
 function truncate(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -17,9 +22,19 @@ export function TopBar() {
   const [address, setAddress] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>("");
+  const [walletReady, setWalletReady] = useState(false);
 
   const loadWatchlist = useWatchlistStore((s) => s.load);
   const resetWatchlist = useWatchlistStore((s) => s.reset);
+
+  // Some wallets (OKX, Rabby) inject after first paint via EIP-6963. Listen
+  // until at least one wallet is announced so the button does not appear
+  // disabled forever in those cases.
+  useEffect(() => {
+    setWalletReady(isWalletInstalled());
+    const unsubscribe = subscribeToWalletDiscovery(() => setWalletReady(true));
+    return unsubscribe;
+  }, []);
 
   // On mount: check existing session and prime the watchlist.
   useEffect(() => {
@@ -46,13 +61,16 @@ export function TopBar() {
 
   const connect = useCallback(async () => {
     setError("");
-    if (typeof window === "undefined" || !window.ethereum) {
-      setError("No wallet detected. Install MetaMask or Rabby and try again.");
+    const provider = getInjectedProvider();
+    if (!provider) {
+      setError(
+        "No wallet detected. Install MetaMask, OKX, Rabby, or Coinbase Wallet.",
+      );
       return;
     }
     setBusy(true);
     try {
-      const accounts = await window.ethereum.request<string[]>({
+      const accounts = await provider.request<string[]>({
         method: "eth_requestAccounts",
       });
       const account = accounts?.[0];
@@ -69,7 +87,7 @@ export function TopBar() {
         nonce,
       });
 
-      const signature = await window.ethereum.request<string>({
+      const signature = await provider.request<string>({
         method: "personal_sign",
         params: [message, account],
       });
@@ -142,11 +160,21 @@ export function TopBar() {
           onClick={connect}
           disabled={busy}
           className="gap-2"
-          title={error || "Sign in with your wallet"}
+          title={
+            error ||
+            (!walletReady
+              ? "No wallet detected — install MetaMask, OKX, Rabby, or Coinbase"
+              : "Sign in with your wallet")
+          }
         >
           <Wallet className="size-4" />
           {busy ? "Signing…" : "Connect Wallet"}
         </Button>
+      )}
+      {error && (
+        <div className="absolute right-4 top-14 z-40 max-w-xs rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300 shadow-lg">
+          {error}
+        </div>
       )}
     </header>
   );
