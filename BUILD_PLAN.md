@@ -698,6 +698,20 @@ JWT_SECRET=
     `genvm-universal-v0.2.16.tar.xz` sang. Workaround tương tự linter (xem dưới).
   - `mock_llm` accumulate chứ không override — phải gọi `direct_vm.clear_mocks()`
     trước khi mock response mới với cùng matcher.
+- 2026-06-03: Phase 4 hoàn tất (gộp 3 commit Plan §5 thành 1).
+  - Lý do gộp: tách 3 commit theo sub-phase sẽ tạo `coingecko.ts` không có
+    consumer ở commit 1, hoặc phải viết page.tsx tạm rồi đè ở commit sau —
+    phạm rule "không tạo file rồi đè". 1 commit cohesive, vẫn revert được.
+  - `@tanstack/react-query` + `zustand` cài cùng commit feature.
+  - shadcn: chỉ `skeleton`. `badge` ban đầu cài rồi xoá vì không có consumer
+    (CoinRow dùng `<span>` thuần — đủ và đỡ deps).
+  - URL params `?q=&sort=` cho FilterBar. `useDashboardFilters` đặt cạnh
+    `FilterBar.tsx` thay vì tạo dir `hooks/` empty.
+  - Suspense bao Dashboard trong page.tsx vì Next 16 yêu cầu cho
+    `useSearchParams`.
+  - Binance symbol map: dedupe theo highest mcap (CoinGecko trả mcap desc).
+  - Exit gate: `tsc --noEmit` + `next build` đều pass; HTML response 200 với
+    đầy đủ FilterBar/Select/Skeleton; URL params reflow đúng.
 - 2026-06-03: Phase 3 hoàn tất.
   - `frontend/` — Next.js **16.2.7** + React 19.2 + Tailwind 4 + shadcn (radix preset).
     Tên scaffold ghi Next 15 trong plan ban đầu, thực tế create-next-app pull bản 16.
