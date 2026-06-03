@@ -1,0 +1,18 @@
+{
+  "name": "cryptolens-cron",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "monitor": "tsx monitor_coins.ts",
+    "refresh-coins": "tsx refresh_coins.ts"
+  },
+  "dependencies": {
+    "genlayer-js": "^1.1.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
+  }
+}

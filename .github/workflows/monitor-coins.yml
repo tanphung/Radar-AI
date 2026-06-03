@@ -1,0 +1,40 @@
+name: Monitor coins
+
+on:
+  schedule:
+    # Every 2 hours. GitHub Actions schedule has ~5-15 min jitter — acceptable.
+    - cron: "0 */2 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: monitor-coins
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    name: monitor_batch x4
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install cron deps
+        working-directory: cron
+        run: npm install --no-audit --no-fund
+
+      - name: Run monitor
+        working-directory: cron
+        env:
+          GENLAYER_NETWORK: ${{ secrets.GENLAYER_NETWORK || 'studionet' }}
+          CONTRACT_ADDRESS: ${{ secrets.CONTRACT_ADDRESS }}
+          CRON_PRIVATE_KEY: ${{ secrets.CRON_PRIVATE_KEY }}
+        run: npm run monitor
