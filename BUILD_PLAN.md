@@ -704,6 +704,21 @@ JWT_SECRET=
     `genvm-universal-v0.2.16.tar.xz` sang. Workaround tương tự linter (xem dưới).
   - `mock_llm` accumulate chứ không override — phải gọi `direct_vm.clear_mocks()`
     trước khi mock response mới với cùng matcher.
+- 2026-06-03: Phase 5 hoàn tất (2 commit: detail page + analysis card).
+  - Real client `genlayer-js` **chưa cài** — dời sang Phase 9 khi contract
+    deploy xong. Mock client trong `cryptoOracle.ts` dùng localStorage +
+    setTimeout 12s, varied per-coin via hash.
+  - lucide-react 1.17 bỏ icon `Github`, dùng `GitBranch` cho update type
+    `github`.
+  - shadcn: thêm `tabs` (ChartBlock) + `badge` (AnalysisHeader). `card`
+    không cài — mỗi section có style riêng theo brief, không cần wrapper
+    chung.
+  - `lightweight-charts` v5 API: `chart.addSeries(AreaSeries, opts)` —
+    khác v4 (`addAreaSeries`). Đã dùng đúng.
+  - CoinRow wrap `<Link>` → click row → `/coin/[id]`. Hover state thêm.
+  - Page `/coin/[id]/page.tsx` dùng `useParams` (client-side) thay vì
+    server component `await params` — tránh tách thành 2 file page+view.
+  - Exit gate: tsc + build pass, /coin/bitcoin 200, route `ƒ` dynamic.
 - 2026-06-03: Phase 4 hoàn tất (gộp 3 commit Plan §5 thành 1).
   - Lý do gộp: tách 3 commit theo sub-phase sẽ tạo `coingecko.ts` không có
     consumer ở commit 1, hoặc phải viết page.tsx tạm rồi đè ở commit sau —
