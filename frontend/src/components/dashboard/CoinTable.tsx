@@ -12,7 +12,7 @@ interface Props {
 }
 
 const HEADER_GRID =
-  "grid grid-cols-[36px_minmax(0,1fr)_120px_88px_120px_88px] gap-3 border-b border-border bg-muted/40 px-4 py-2 text-xs uppercase tracking-wide text-muted-foreground md:grid-cols-[36px_minmax(0,1fr)_140px_96px_140px_104px] md:px-6";
+  "grid grid-cols-[28px_28px_minmax(0,1fr)_120px_88px_120px_88px] gap-3 border-b border-border bg-muted/40 px-4 py-2 text-xs uppercase tracking-wide text-muted-foreground md:grid-cols-[28px_36px_minmax(0,1fr)_140px_96px_140px_104px] md:px-6";
 
 export function CoinTable({ coins, loading, error }: Props) {
   if (error) {
@@ -26,6 +26,7 @@ export function CoinTable({ coins, loading, error }: Props) {
     return (
       <div>
         <div className={HEADER_GRID}>
+          <span aria-hidden />
           <span>#</span>
           <span>Coin</span>
           <span className="text-right">Price</span>

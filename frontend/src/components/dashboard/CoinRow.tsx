@@ -8,6 +8,8 @@ import { formatCompactUsd, formatPct, formatPrice } from "@/lib/format";
 import { useLivePrice } from "@/lib/store/priceStore";
 import { cn } from "@/lib/utils";
 
+import { StarButton } from "@/components/watchlist/StarButton";
+
 import { Sparkline } from "./Sparkline";
 
 interface Props {
@@ -35,7 +37,8 @@ export function CoinRow({ coin }: Props) {
   return (
     <Link
       href={`/coin/${coin.id}`}
-      className="grid grid-cols-[36px_minmax(0,1fr)_120px_88px_120px_88px] items-center gap-3 border-b border-border px-4 py-3 text-sm transition-colors hover:bg-muted/40 md:grid-cols-[36px_minmax(0,1fr)_140px_96px_140px_104px] md:px-6">
+      className="grid grid-cols-[28px_28px_minmax(0,1fr)_120px_88px_120px_88px] items-center gap-3 border-b border-border px-4 py-3 text-sm transition-colors hover:bg-muted/40 md:grid-cols-[28px_36px_minmax(0,1fr)_140px_96px_140px_104px] md:px-6">
+      <StarButton coinId={coin.id} />
       <span className="text-muted-foreground">{coin.rank}</span>
       <div className="flex min-w-0 items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
