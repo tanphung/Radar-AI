@@ -1,16 +1,28 @@
 "use client";
 
-// Mock contract client — returned data shape matches what the real GenLayer
-// contract will emit. Real genlayer-js wiring lands in Phase 9 (deploy);
-// until then this lets the UI work end-to-end with deterministic but per-coin
-// varied analyses persisted in localStorage.
+// Crypto oracle client. Real path uses genlayer-js when a valid contract
+// address is configured and NEXT_PUBLIC_MOCK_CONTRACT is not "1". Otherwise
+// the mock returns deterministic per-coin data so the UI works fully offline.
+//
+// Real <-> mock dispatch lives at the bottom of the file (requestAnalysis /
+// getLatestAnalysis). The shape exposed upward is AnalysisResult / AlertSummary
+// in both cases.
 
+import {
+  getContractAddress,
+  getReadClient,
+  getWriteClient,
+  useRealContract,
+} from "./client";
 import type {
   AlertKind,
   AlertSummary,
   AnalysisResult,
+  NewsItem,
+  ProjectUpdate,
   RiskLevel,
   Signal,
+  UpdateType,
 } from "./schema";
 
 const STORAGE_KEY = "cryptolens:analyses";
@@ -129,7 +141,7 @@ function generateMockAnalysis(
   };
 }
 
-export async function requestAnalysis(
+async function requestAnalysisMock(
   coinId: string,
   symbol: string,
   coinName: string,
@@ -233,11 +245,140 @@ export function fetchAlertsAll(): AlertSummary[] {
   return generateMockAlerts();
 }
 
-export function getLatestAnalysis(coinId: string): AnalysisResult | null {
+function getLatestAnalysisMock(coinId: string): AnalysisResult | null {
   const store = loadStore();
   const found = store[coinId];
   if (!found) return null;
   const ageMs = Date.now() - new Date(found.createdAt).getTime();
   if (!Number.isFinite(ageMs) || ageMs < 0) return found;
   return ageMs <= RECENT_WINDOW_MS ? found : found;
+}
+
+// --- Real contract path (Phase 9) ---
+
+interface RawCoinAnalysis {
+  coin_id: string;
+  symbol: string;
+  signal: string;
+  sentiment_score: number | bigint;
+  risk_level: string;
+  confidence: number | bigint;
+  breaking_headline: string;
+  news_json: string;
+  updates_json: string;
+  bullish_json: string;
+  risks_json: string;
+  smart_money: string;
+  verdict_summary: string;
+  sources_json: string;
+  requested_by: string;
+  created_at_iso: string;
+  is_alert: boolean;
+  alert_reason: string;
+}
+
+function safeJsonArray<T>(raw: string, fallback: T[]): T[] {
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function toAnalysisResult(
+  raw: RawCoinAnalysis,
+  analysisId: string,
+): AnalysisResult {
+  return {
+    analysisId,
+    coinId: raw.coin_id,
+    symbol: raw.symbol,
+    signal: raw.signal as Signal,
+    sentimentScore: Number(raw.sentiment_score),
+    riskLevel: raw.risk_level as RiskLevel,
+    confidence: Number(raw.confidence),
+    breakingHeadline: raw.breaking_headline,
+    news: safeJsonArray<NewsItem>(raw.news_json, []),
+    projectUpdates: safeJsonArray<ProjectUpdate>(raw.updates_json, []),
+    bullishSignals: safeJsonArray<string>(raw.bullish_json, []),
+    riskSignals: safeJsonArray<string>(raw.risks_json, []),
+    smartMoney: raw.smart_money,
+    verdictSummary: raw.verdict_summary,
+    dataSources: safeJsonArray<string>(raw.sources_json, []),
+    createdAt: raw.created_at_iso,
+    isAlert: Boolean(raw.is_alert),
+    alertReason: raw.alert_reason,
+  };
+}
+
+async function getLatestAnalysisReal(
+  coinId: string,
+): Promise<AnalysisResult | null> {
+  const address = getContractAddress();
+  if (!address) return null;
+  try {
+    const client = getReadClient();
+    const raw = (await client.readContract({
+      address,
+      functionName: "get_latest_analysis",
+      args: [coinId],
+    })) as unknown as RawCoinAnalysis;
+    return toAnalysisResult(raw, `${coinId}_latest`);
+  } catch (err) {
+    // "No analysis for coin" is the contract's UserError on first call —
+    // surface as a soft null so the UI shows the idle state.
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("No analysis for coin")) return null;
+    throw err;
+  }
+}
+
+async function requestAnalysisReal(
+  coinId: string,
+  symbol: string,
+): Promise<AnalysisResult> {
+  const address = getContractAddress();
+  if (!address) {
+    throw new Error("Contract address not configured");
+  }
+  const client = getWriteClient();
+  const hash = await client.writeContract({
+    address,
+    functionName: "request_analysis",
+    args: [coinId, symbol],
+    value: 0n,
+  });
+  await client.waitForTransactionReceipt({
+    hash,
+    interval: 5_000,
+    retries: 60,
+  });
+  const stored = await getLatestAnalysisReal(coinId);
+  if (!stored) {
+    throw new Error("Analysis was submitted but could not be read back");
+  }
+  return stored;
+}
+
+// --- Dispatch ---
+
+export async function requestAnalysis(
+  coinId: string,
+  symbol: string,
+  coinName: string,
+): Promise<AnalysisResult> {
+  if (useRealContract()) {
+    return requestAnalysisReal(coinId, symbol);
+  }
+  return requestAnalysisMock(coinId, symbol, coinName);
+}
+
+export async function getLatestAnalysis(
+  coinId: string,
+): Promise<AnalysisResult | null> {
+  if (useRealContract()) {
+    return getLatestAnalysisReal(coinId);
+  }
+  return getLatestAnalysisMock(coinId);
 }

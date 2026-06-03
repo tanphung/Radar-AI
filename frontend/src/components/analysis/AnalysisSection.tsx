@@ -36,18 +36,34 @@ export function AnalysisSection({ coinId, symbol, coinName }: Props) {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [progressIndex, setProgressIndex] = useState<number>(0);
 
-  // Load cached result on mount / coin change.
+  // Load cached/on-chain latest result on mount / coin change.
   useEffect(() => {
-    const cached = getLatestAnalysis(coinId);
-    if (cached) {
-      setResult(cached);
-      setStatus("ready");
-    } else {
-      setResult(null);
-      setStatus("idle");
-    }
+    let cancelled = false;
     setErrorMessage("");
     setProgressIndex(0);
+    (async () => {
+      try {
+        const cached = await getLatestAnalysis(coinId);
+        if (cancelled) return;
+        if (cached) {
+          setResult(cached);
+          setStatus("ready");
+        } else {
+          setResult(null);
+          setStatus("idle");
+        }
+      } catch (err) {
+        if (cancelled) return;
+        setResult(null);
+        setStatus("idle");
+        setErrorMessage(
+          err instanceof Error ? err.message : "Could not load latest analysis",
+        );
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [coinId]);
 
   // Rotate progress text while loading.
