@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import type { MarketCoin } from "@/lib/data/coingecko";
@@ -32,7 +33,9 @@ export function CoinRow({ coin }: Props) {
   const positive = coin.change24h >= 0;
 
   return (
-    <div className="grid grid-cols-[36px_minmax(0,1fr)_120px_88px_120px_88px] items-center gap-3 border-b border-border px-4 py-3 text-sm md:grid-cols-[36px_minmax(0,1fr)_140px_96px_140px_104px] md:px-6">
+    <Link
+      href={`/coin/${coin.id}`}
+      className="grid grid-cols-[36px_minmax(0,1fr)_120px_88px_120px_88px] items-center gap-3 border-b border-border px-4 py-3 text-sm transition-colors hover:bg-muted/40 md:grid-cols-[36px_minmax(0,1fr)_140px_96px_140px_104px] md:px-6">
       <span className="text-muted-foreground">{coin.rank}</span>
       <div className="flex min-w-0 items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -74,6 +77,6 @@ export function CoinRow({ coin }: Props) {
       <div className="flex justify-end">
         <Sparkline data={coin.sparkline7d} positive={positive} />
       </div>
-    </div>
+    </Link>
   );
 }
