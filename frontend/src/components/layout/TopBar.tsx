@@ -1,8 +1,9 @@
 "use client";
 
-import { Bell, LogOut, Search, Wallet } from "lucide-react";
+import { LogOut, Search, Wallet } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
+import { AlertBell } from "@/components/alerts/AlertBell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { buildSiweMessage } from "@/lib/auth/siwe";
@@ -13,7 +14,6 @@ function truncate(addr: string): string {
 }
 
 export function TopBar() {
-  // TODO(Phase 7): wire AlertBell badge count from contract alerts.
   const [address, setAddress] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>("");
@@ -125,9 +125,7 @@ export function TopBar() {
           className="pl-9"
         />
       </div>
-      <Button variant="ghost" size="icon" aria-label="Alerts">
-        <Bell className="size-4" />
-      </Button>
+      <AlertBell />
       {address ? (
         <Button
           variant="outline"

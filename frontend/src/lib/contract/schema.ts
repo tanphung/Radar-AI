@@ -23,6 +23,25 @@ export interface ProjectUpdate {
   content: string;
 }
 
+export type AlertKind =
+  | "whale"
+  | "volume"
+  | "exchange"
+  | "dev"
+  | "sentiment"
+  | "news";
+
+export interface AlertSummary {
+  alertId: string;
+  analysisId: string;
+  coinId: string;
+  symbol: string;
+  kind: AlertKind;
+  emoji: string;
+  reason: string;
+  createdAt: string;
+}
+
 export interface AnalysisResult {
   analysisId: string;
   coinId: string;

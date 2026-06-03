@@ -5,7 +5,13 @@
 // until then this lets the UI work end-to-end with deterministic but per-coin
 // varied analyses persisted in localStorage.
 
-import type { AnalysisResult, RiskLevel, Signal } from "./schema";
+import type {
+  AlertKind,
+  AlertSummary,
+  AnalysisResult,
+  RiskLevel,
+  Signal,
+} from "./schema";
 
 const STORAGE_KEY = "cryptolens:analyses";
 const MOCK_DELAY_MS = 12_000;
@@ -134,6 +140,97 @@ export async function requestAnalysis(
   store[coinId] = result;
   saveStore(store);
   return result;
+}
+
+// --- Mock alerts (Phase 7) ---
+// Real contract: monitor_batch flags is_alert; cron runs every 2h; frontend
+// calls get_alerts(coinId) per cron-seeded coin. Until Phase 9, we generate
+// deterministic alerts seeded by coin id so the UI is populated.
+
+const ALERT_SEED: Array<{ id: string; symbol: string }> = [
+  { id: "bitcoin", symbol: "btc" },
+  { id: "ethereum", symbol: "eth" },
+  { id: "solana", symbol: "sol" },
+  { id: "binancecoin", symbol: "bnb" },
+  { id: "ripple", symbol: "xrp" },
+  { id: "cardano", symbol: "ada" },
+  { id: "dogecoin", symbol: "doge" },
+  { id: "avalanche-2", symbol: "avax" },
+  { id: "polkadot", symbol: "dot" },
+  { id: "chainlink", symbol: "link" },
+];
+
+const ALERT_TEMPLATES: Array<{
+  kind: AlertKind;
+  emoji: string;
+  reason: (sym: string, n: number) => string;
+}> = [
+  {
+    kind: "whale",
+    emoji: "🐋",
+    reason: (sym, n) =>
+      `Whale net-withdrew $${30 + (n % 70)}M of ${sym} from a major CEX in the last hour`,
+  },
+  {
+    kind: "volume",
+    emoji: "📈",
+    reason: (sym, n) =>
+      `${sym} spot volume spiked +${180 + (n % 240)}% versus the 7-day average`,
+  },
+  {
+    kind: "exchange",
+    emoji: "🏦",
+    reason: (sym, n) =>
+      `${sym} exchange inflows reached a ${20 + (n % 25)}-day high`,
+  },
+  {
+    kind: "dev",
+    emoji: "🔧",
+    reason: (sym, n) =>
+      `${sym} core repos saw ${24 + (n % 50)} merged commits in the last 24h`,
+  },
+  {
+    kind: "sentiment",
+    emoji: "💬",
+    reason: (sym) => `${sym} social sentiment flipped within the last 2 hours`,
+  },
+  {
+    kind: "news",
+    emoji: "📰",
+    reason: (sym, n) =>
+      `${sym} mentioned in ${5 + (n % 12)} top-tier outlets within an hour`,
+  },
+];
+
+const SESSION_BASE_MS = Date.now();
+
+function generateMockAlerts(): AlertSummary[] {
+  const out: AlertSummary[] = [];
+  for (const coin of ALERT_SEED) {
+    const h = hash(coin.id);
+    const count = h % 3; // 0, 1, or 2 alerts per coin
+    for (let i = 0; i < count; i++) {
+      const tpl = ALERT_TEMPLATES[(h + i * 7) % ALERT_TEMPLATES.length];
+      const upperSym = coin.symbol.toUpperCase();
+      const ageMin = (h + i * 23) % 600; // 0..600 minutes
+      out.push({
+        alertId: `alert_${coin.id}_${i}`,
+        analysisId: `mock_${coin.id}`,
+        coinId: coin.id,
+        symbol: coin.symbol,
+        kind: tpl.kind,
+        emoji: tpl.emoji,
+        reason: tpl.reason(upperSym, h + i * 13),
+        createdAt: new Date(SESSION_BASE_MS - ageMin * 60_000).toISOString(),
+      });
+    }
+  }
+  out.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  return out;
+}
+
+export function fetchAlertsAll(): AlertSummary[] {
+  return generateMockAlerts();
 }
 
 export function getLatestAnalysis(coinId: string): AnalysisResult | null {
