@@ -704,6 +704,17 @@ JWT_SECRET=
     `genvm-universal-v0.2.16.tar.xz` sang. Workaround tương tự linter (xem dưới).
   - `mock_llm` accumulate chứ không override — phải gọi `direct_vm.clear_mocks()`
     trước khi mock response mới với cùng matcher.
+- 2026-06-03: Phase 7 hoàn tất (1 commit).
+  - Mock alerts seed 10 coin phổ biến + 6 template (whale/volume/exchange/
+    dev/sentiment/news), createdAt offset bằng hash → cùng session UI ổn định.
+  - AlertBell: badge đếm alert mới hơn localStorage `lastSeen` timestamp;
+    click mở dropdown click-outside-to-close, mark seen khi mở.
+  - `/alerts` page tabs `My Watchlist` (default) + `All`. Filter theo Zustand
+    `watchlistStore`. Static prerender (`○`).
+  - Sub-1-msg: AlertBell `useTop200`-độc-lập — dùng seed 10 coin tĩnh thay
+    vì bám CoinGecko top200 → tránh ép mọi page tải top200 chỉ để render bell.
+  - Phase 9 sẽ thay `fetchAlertsAll()` bằng lặp `getAlerts(coinId)` thật
+    qua genlayer-js trên cron-seeded coin list (xem note trong file).
 - 2026-06-03: Phase 6 hoàn tất (gộp 3 commit Plan §7 thành 1).
   - Lý do gộp: TopBar đụng cả auth (connect/disconnect) lẫn watchlist
     (load on mount) → tách 3 commit sẽ làm TopBar lưng chừng hoặc tạo orphan.
