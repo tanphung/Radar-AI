@@ -61,7 +61,7 @@ D:\app\
 │
 ├── cron\
 │   ├── monitor_coins.ts    # script chạy bởi GitHub Actions
-│   └── coins_top200.json   # snapshot CoinGecko id list, refresh manual
+│   └── coins_top40.json    # snapshot CoinGecko top 40, refresh manual
 │
 ├── .github\workflows\
 │   └── monitor-coins.yml   # cron 2h
@@ -529,18 +529,24 @@ không tạo `CoinRow2.tsx`).
 
 ## 9. Phase 8 — Cron job (Feature 3 back) (2 commit)
 
-**Goal:** GitHub Actions chạy mỗi 2h, chia 200 coin thành batch 25, gọi
-`monitor_batch` 8 lần.
+**Goal:** GitHub Actions chạy mỗi 2h, chia 40 coin thành batch 10, gọi
+`monitor_batch` 4 lần. Contract `MAX_BATCH_SIZE=30` giữ làm giới hạn cứng
+(headroom để tăng pool sau mà không cần redeploy).
 
 ### 9.1 Script
-- `cron/coins_top200.json`: snapshot CoinGecko top 200 (id, symbol). Refresh manual,
+- `cron/coins_top40.json`: snapshot CoinGecko top 40 (id, symbol). Refresh manual,
   có script `npm run cron:refresh-coins`.
 - `cron/monitor_coins.ts`:
-  - Load list, chunk 25.
+  - Load list, chunk **10**.
   - For each chunk: build `coin_ids_pipe`, `symbols_pipe`, gọi `monitor_batch` với
     `run_id = "cron_" + Date.now()`.
   - Log số tx, số alert (đọc lại run record).
   - Retry mỗi tx tối đa 2 lần với delay 5s nếu fail TRANSIENT.
+
+### 9.0 Cost ước tính (mới)
+- 4 tx/cycle × 12 cycle/day = **48 tx/ngày**
+- 48 × 10 LLM call/tx = **480 LLM call/ngày** (leader path)
+- 1 tx batch 10 coin ≈ 1-3 phút → cycle ≈ 4-12 phút
 
 ### 9.2 GitHub Actions
 - `.github/workflows/monitor-coins.yml`:
