@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
+import { Providers } from "@/lib/providers";
 
 import "./globals.css";
 
@@ -34,16 +35,18 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
     >
       <body className="min-h-full">
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <TopBar />
-            <main className="flex-1 overflow-x-hidden pb-20 md:pb-0">
-              {children}
-            </main>
+        <Providers>
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <TopBar />
+              <main className="flex-1 overflow-x-hidden pb-20 md:pb-0">
+                {children}
+              </main>
+            </div>
           </div>
-        </div>
-        <MobileNav />
+          <MobileNav />
+        </Providers>
       </body>
     </html>
   );
