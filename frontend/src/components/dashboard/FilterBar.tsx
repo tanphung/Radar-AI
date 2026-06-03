@@ -28,8 +28,8 @@ export function FilterBar() {
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Filter by name or symbol"
-          aria-label="Filter coins"
+          placeholder="Search coin by name or symbol"
+          aria-label="Search coins"
           className="pl-9"
         />
       </div>
