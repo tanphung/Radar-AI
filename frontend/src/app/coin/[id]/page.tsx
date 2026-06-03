@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 
+import { AnalysisSection } from "@/components/analysis/AnalysisSection";
 import { ChartBlock } from "@/components/coin/ChartBlock";
 import { PriceHeader } from "@/components/coin/PriceHeader";
 import { StatsGrid } from "@/components/coin/StatsGrid";
@@ -38,6 +39,11 @@ export default function Page() {
       <PriceHeader coin={coin} />
       <ChartBlock id={coin.id} positive={positive} />
       <StatsGrid coin={coin} />
+      <AnalysisSection
+        coinId={coin.id}
+        symbol={coin.symbol}
+        coinName={coin.name}
+      />
     </div>
   );
 }
