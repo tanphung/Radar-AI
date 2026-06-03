@@ -704,6 +704,29 @@ JWT_SECRET=
     `genvm-universal-v0.2.16.tar.xz` sang. Workaround tương tự linter (xem dưới).
   - `mock_llm` accumulate chứ không override — phải gọi `direct_vm.clear_mocks()`
     trước khi mock response mới với cùng matcher.
+- 2026-06-03: Phase 8 + 9 hoàn tất (3 commit + push GitHub).
+  - **Phase 8 cron**: `cron/` standalone npm project (ESM, tsx, genlayer-js
+    1.1.8). `monitor_coins.ts` retry 3x với 5s delay nếu TRANSIENT, đợi
+    `TransactionStatus.FINALIZED`. `refresh_coins.ts` manual để snapshot
+    lại. `coins_top40.json` đã pull live từ CoinGecko. Workflow
+    `.github/workflows/monitor-coins.yml` schedule `0 */2 * * *` + manual
+    dispatch + concurrency lock.
+  - **Phase 9a real client**: `src/lib/contract/client.ts` dispatch theo
+    env. `useRealContract()` true khi `NEXT_PUBLIC_CONTRACT_ADDRESS` hợp
+    lệ 0x+40hex VÀ `NEXT_PUBLIC_MOCK_CONTRACT != "1"`. Mock fallback giữ
+    nguyên. `getLatestAnalysis` đổi thành async — `AnalysisSection`
+    useEffect rewrite với cancellation flag.
+  - **tsconfig target**: ES2017 → ES2020 (cần cho `0n` BigInt literal).
+  - **Alerts**: vẫn mock vì cần N×get_alerts + N×get_analysis reads —
+    chờ cron cycle đầu finalize trên chain rồi swap (TODO comment trong
+    `cryptoOracle.ts`).
+  - **Integration test**: `test_crypto_oracle_consensus.py` 3 test
+    (owner_init, request_analysis_consensus, alerts_initially_empty).
+    Hỗ trợ `CRYPTO_ORACLE_ADDRESS` env để attach contract đã deploy thay
+    vì redeploy mỗi run. Chưa chạy locally — user run khi cần.
+  - **Risk note**: nếu owner key dùng cho cả deploy lẫn cron operator,
+    chỉ cần 1 wallet trong GitHub Secrets. Nếu tách 2 ví thì owner phải
+    gọi `authorize_cron(cron_addr)` 1 lần qua CLI.
 - 2026-06-03: Phase 7 hoàn tất (1 commit).
   - Mock alerts seed 10 coin phổ biến + 6 template (whale/volume/exchange/
     dev/sentiment/news), createdAt offset bằng hash → cùng session UI ổn định.
