@@ -704,6 +704,20 @@ JWT_SECRET=
     `genvm-universal-v0.2.16.tar.xz` sang. Workaround tương tự linter (xem dưới).
   - `mock_llm` accumulate chứ không override — phải gọi `direct_vm.clear_mocks()`
     trước khi mock response mới với cùng matcher.
+- 2026-06-03: Phase 6 hoàn tất (gộp 3 commit Plan §7 thành 1).
+  - Lý do gộp: TopBar đụng cả auth (connect/disconnect) lẫn watchlist
+    (load on mount) → tách 3 commit sẽ làm TopBar lưng chừng hoặc tạo orphan.
+  - `viem` không cài — `siwe@3` tự verify, không cần viem helper. SDK lib `jose` đủ cho JWT.
+  - Supabase **chưa setup** — `lib/supabase/client.ts` fallback in-memory Map.
+    User chạy SQL §7.1 và set `SUPABASE_URL`+`SUPABASE_SERVICE_KEY` để bật real
+    persistence. Log warn 1 lần khi missing.
+  - `JWT_SECRET` dev fallback có sẵn — prod throw nếu missing.
+  - Frontend `.gitignore` ban đầu chặn `.env*` toàn bộ → đã thêm
+    `!.env.example` để template lên git.
+  - StarButton dùng `e.stopPropagation` để click không trigger Link nav.
+  - Exit gate curl: nonce/verify/session/watchlist/logout đều phản hồi đúng
+    status code. Full SIWE flow cần real wallet (MetaMask/Rabby) — user test
+    manual.
 - 2026-06-03: Phase 5 hoàn tất (2 commit: detail page + analysis card).
   - Real client `genlayer-js` **chưa cài** — dời sang Phase 9 khi contract
     deploy xong. Mock client trong `cryptoOracle.ts` dùng localStorage +
