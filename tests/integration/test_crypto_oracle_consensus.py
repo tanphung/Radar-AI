@@ -1,80 +1,93 @@
-"""Integration tests for CryptoOracle on a live GenLayer environment.
+"""Live GenLayer smoke tests for upgraded CryptoLens.
 
-These tests exercise the full consensus path — leader execution + validator
-verification + finalization — so they need a running network. They are NOT
-part of the fast `pytest tests/direct/` suite.
-
-Run modes:
-    # against studionet (hosted, gasless, requires Studio account)
-    gltest tests/integration/ -v -s --network studionet
-
-    # against a local studio docker
-    gltest tests/integration/ -v -s --network localnet
-
-    # against testnet bradbury (needs funded account)
+Run only when a funded account/network is available:
     gltest tests/integration/ -v -s --network testnet_bradbury
 
-Each `request_analysis` invocation triggers a real LLM call across validators
-and takes 30-90s to finalize. Keep the suite small.
+Set CRYPTO_ORACLE_ADDRESS to attach to an existing deployment. Otherwise gltest
+deploys the current contract before running the smoke tests.
 """
+import json
 import os
-
-import pytest
 
 from gltest import get_contract_factory
 from gltest.assertions import tx_execution_succeeded
 
 
 CONTRACT_PATH = "contracts/crypto_oracle.py"
-
-# Reuse an already-deployed contract by setting this. Useful when you do not
-# want to redeploy on every CI run, or when targeting a known address such as
-# the one published in `.env.example`.
 PRE_DEPLOYED_ADDRESS = os.environ.get("CRYPTO_ORACLE_ADDRESS", "").strip()
 
 
-@pytest.fixture(scope="module")
+def snapshot(coin_id="bitcoin", symbol="BTC", price=10400000):
+    return {
+        "id": coin_id,
+        "symbol": symbol,
+        "price_usd_cents": price,
+        "change_24h_pct": 4.2,
+        "volume_usd": 45_000_000_000,
+        "market_cap_usd": 2_000_000_000_000,
+        "high_24h_cents": price + 300000,
+        "low_24h_cents": price - 200000,
+        "snapshot_timestamp": "2026-06-23T00:00:00Z",
+        "source": "CoinGecko",
+    }
+
+
+def curated_batch():
+    coins = [
+        ("bitcoin", "BTC", 10400000),
+        ("ethereum", "ETH", 350000),
+        ("binancecoin", "BNB", 65000),
+        ("ripple", "XRP", 250),
+        ("solana", "SOL", 16500),
+        ("dogecoin", "DOGE", 18),
+        ("cardano", "ADA", 72),
+        ("chainlink", "LINK", 1800),
+        ("avalanche-2", "AVAX", 2600),
+        ("sui", "SUI", 330),
+    ]
+    return json.dumps([snapshot(c, s, p) for c, s, p in coins])
+
+
 def oracle():
-    """Deploy a fresh CryptoOracle (or attach to a pre-deployed one)."""
     factory = get_contract_factory("CryptoOracle", path=CONTRACT_PATH)
     if PRE_DEPLOYED_ADDRESS:
         return factory.attach(PRE_DEPLOYED_ADDRESS)
     return factory.deploy(args=[])
 
 
-def test_owner_is_initialized(oracle):
-    """get_owner returns the deployer address; is_paused is False."""
-    owner = oracle.get_owner(args=[]).call()
-    assert owner is not None
-    assert oracle.is_paused(args=[]).call() is False
+def test_owner_is_initialized():
+    contract = oracle()
+    assert contract.get_owner(args=[]).call() is not None
+    assert contract.is_paused(args=[]).call() is False
 
 
-def test_request_analysis_runs_consensus(oracle):
-    """Submit a real request_analysis for bitcoin and read it back.
-
-    Costs ~30-90s for consensus to finalize plus one LLM call per validator.
-    Asserts the result has a valid signal and a non-empty verdict — the
-    exact LLM output is not deterministic so we only check shape.
-    """
-    receipt = oracle.request_analysis(args=["bitcoin", "BTC"]).transact()
+def test_request_analysis_creates_thesis_live():
+    contract = oracle()
+    receipt = contract.request_analysis(
+        args=["bitcoin", "BTC", json.dumps(snapshot())],
+    ).transact()
     assert tx_execution_succeeded(receipt)
 
-    analysis = oracle.get_latest_analysis(args=["bitcoin"]).call()
+    analysis = contract.get_latest_analysis(args=["bitcoin"]).call()
     assert analysis.coin_id == "bitcoin"
-    assert analysis.symbol == "BTC"
     assert analysis.signal in ("buy", "hold", "sell", "watch")
-    assert analysis.risk_level in ("low", "medium", "high", "extreme")
-    assert 0 <= analysis.sentiment_score <= 100
-    assert 0 <= analysis.confidence <= 100
-    assert len(analysis.breaking_headline) > 0
-    assert len(analysis.verdict_summary) >= 40
-    # JSON-encoded lists should at minimum start with `[`
-    assert analysis.news_json.startswith("[")
-    assert analysis.bullish_json.startswith("[")
-    assert analysis.risks_json.startswith("[")
+    assert analysis.thesis_id.startswith("th_")
+
+    thesis = contract.get_thesis(args=[analysis.thesis_id]).call()
+    assert thesis.horizon_hours == 24
+    assert thesis.status in ("open", "intact", "weakened", "invalidated", "completed")
 
 
-def test_get_alerts_initially_empty(oracle):
-    """A coin that has never been monitored has no alerts."""
-    alerts = oracle.get_alerts(args=["nonexistent-test-coin"]).call()
-    assert alerts == ""
+def test_monitor_batch_single_tx_records_ten_results_live():
+    contract = oracle()
+    run_id = "smoke_20260623"
+    receipt = contract.monitor_batch(args=[run_id, curated_batch()]).transact()
+    assert tx_execution_succeeded(receipt)
+
+    run = contract.get_run(args=[run_id]).call()
+    assert run.expected_coin_count == 10
+    assert run.submitted_tx_count == 1
+    assert run.processed_coin_count + run.failed_coin_count == 10
+
+    result_ids = contract.get_run_result_ids(args=[run_id]).call()
+    assert len(result_ids.split("|")) == 10

@@ -8,7 +8,12 @@ import {
   getLatestAnalysis,
   requestAnalysis,
 } from "@/lib/contract/cryptoOracle";
+import {
+  isRealContractEnabled,
+  networkLabel,
+} from "@/lib/contract/client";
 import type { AnalysisResult } from "@/lib/contract/schema";
+import type { MarketSnapshotInput } from "@/lib/contract/schema";
 
 import { AnalysisCard } from "./AnalysisCard";
 
@@ -16,6 +21,7 @@ interface Props {
   coinId: string;
   symbol: string;
   coinName: string;
+  marketSnapshot: MarketSnapshotInput;
 }
 
 type Status = "idle" | "loading" | "ready" | "error";
@@ -30,17 +36,18 @@ const PROGRESS_STEPS = [
 
 const STEP_INTERVAL_MS = 2_400;
 
-export function AnalysisSection({ coinId, symbol, coinName }: Props) {
+export function AnalysisSection({ coinId, symbol, coinName, marketSnapshot }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [progressIndex, setProgressIndex] = useState<number>(0);
+  const modeLabel = isRealContractEnabled()
+    ? `GenLayer consensus · ${networkLabel}`
+    : "Demo analysis · local mock";
 
   // Load cached/on-chain latest result on mount / coin change.
   useEffect(() => {
     let cancelled = false;
-    setErrorMessage("");
-    setProgressIndex(0);
     (async () => {
       try {
         const cached = await getLatestAnalysis(coinId);
@@ -69,7 +76,6 @@ export function AnalysisSection({ coinId, symbol, coinName }: Props) {
   // Rotate progress text while loading.
   useEffect(() => {
     if (status !== "loading") return;
-    setProgressIndex(0);
     const id = setInterval(() => {
       setProgressIndex((i) =>
         i + 1 >= PROGRESS_STEPS.length ? PROGRESS_STEPS.length - 1 : i + 1,
@@ -79,24 +85,30 @@ export function AnalysisSection({ coinId, symbol, coinName }: Props) {
   }, [status]);
 
   const run = useCallback(async () => {
-    setStatus("loading");
-    setErrorMessage("");
+    setProgressIndex(0);
+      setStatus("loading");
+      setErrorMessage("");
     try {
-      const fresh = await requestAnalysis(coinId, symbol, coinName);
+      const fresh = await requestAnalysis(
+        coinId,
+        symbol,
+        coinName,
+        marketSnapshot,
+      );
       setResult(fresh);
       setStatus("ready");
     } catch (e) {
       setErrorMessage(e instanceof Error ? e.message : "Unknown error");
       setStatus("error");
     }
-  }, [coinId, symbol, coinName]);
+  }, [coinId, symbol, coinName, marketSnapshot]);
 
   return (
     <section className="border-t border-border px-4 py-6 md:px-8">
       <header className="mb-4 flex items-baseline justify-between gap-3">
         <h2 className="text-lg font-semibold">AI analysis</h2>
         <span className="text-xs text-muted-foreground">
-          GenLayer consensus · mock until contract is deployed
+          {modeLabel}
         </span>
       </header>
 

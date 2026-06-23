@@ -37,9 +37,9 @@ export function CoinRow({ coin }: Props) {
   return (
     <Link
       href={`/coin/${coin.id}`}
-      className="grid grid-cols-[28px_28px_minmax(0,1fr)_120px_88px_120px_88px] items-center gap-3 border-b border-border px-4 py-3 text-sm transition-colors hover:bg-muted/40 md:grid-cols-[28px_36px_minmax(0,1fr)_140px_96px_140px_104px] md:px-6">
+      className="grid grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-b border-border px-4 py-3 text-sm transition-colors hover:bg-muted/40 md:grid-cols-[28px_36px_minmax(0,1fr)_140px_96px_140px_104px] md:gap-3 md:px-6">
       <StarButton coinId={coin.id} />
-      <span className="text-muted-foreground">{coin.rank}</span>
+      <span className="hidden text-muted-foreground md:block">{coin.rank}</span>
       <div className="flex min-w-0 items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -53,13 +53,13 @@ export function CoinRow({ coin }: Props) {
         <div className="flex min-w-0 flex-col leading-tight">
           <span className="truncate font-medium">{coin.name}</span>
           <span className="text-xs uppercase text-muted-foreground">
-            {coin.symbol}
+            {coin.symbol} <span className="md:hidden">· #{coin.rank}</span>
           </span>
         </div>
       </div>
       <span
         className={cn(
-          "rounded px-2 py-0.5 text-right font-medium transition-colors",
+          "rounded px-2 py-0.5 text-right font-medium transition-colors md:justify-self-end",
           flash === "up" && "bg-emerald-500/15 text-emerald-300",
           flash === "down" && "bg-red-500/15 text-red-300",
         )}
@@ -68,16 +68,17 @@ export function CoinRow({ coin }: Props) {
       </span>
       <span
         className={cn(
-          "text-right font-medium",
+          "col-start-3 text-right text-xs font-medium md:col-auto md:text-sm",
           positive ? "text-emerald-400" : "text-red-400",
         )}
       >
         {formatPct(coin.change24h)}
       </span>
-      <span className="text-right text-muted-foreground">
+      <span className="col-span-2 col-start-2 text-xs text-muted-foreground md:col-auto md:text-right md:text-sm">
+        <span className="md:hidden">MCap </span>
         {formatCompactUsd(coin.marketCap)}
       </span>
-      <div className="flex justify-end">
+      <div className="hidden justify-end md:flex">
         <Sparkline data={coin.sparkline7d} positive={positive} />
       </div>
     </Link>

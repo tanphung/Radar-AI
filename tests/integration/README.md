@@ -1,35 +1,34 @@
-# Integration tests
+# Integration Tests
 
-These touch a live GenLayer environment. Each `request_analysis` call invokes
-a real LLM + validator consensus and takes 30–90s to finalize. Keep the suite
-small and rerun only when the contract or prompt changes.
+These touch a live GenLayer environment. They exercise leader execution,
+validator consensus, finalization, and state read-back for the upgraded
+CryptoLens contract.
 
 ## Prerequisites
 
 - `pip install genlayer-test`
-- A GenLayer environment: studionet (hosted, gasless, simplest), localnet
-  (Docker), or testnet bradbury (needs funded GEN)
+- A GenLayer network such as `testnet_bradbury`, `studionet`, or `localnet`
+- A funded/authorized account when the selected network requires gas
 
-## Run against studionet (recommended for solo dev)
-
-```bash
-gltest tests/integration/ -v -s --network studionet
-```
-
-## Reuse the already-deployed contract
-
-To avoid redeploying on every run, export the address first:
+## Run Against Bradbury
 
 ```bash
-export CRYPTO_ORACLE_ADDRESS=0x4D10566d1017aaA495f482CCEDF94bcBA21F39e3
-gltest tests/integration/ -v -s --network studionet
+gltest tests/integration/ -v -s --network testnet_bradbury
 ```
 
-When `CRYPTO_ORACLE_ADDRESS` is set the fixture calls `factory.attach(addr)`
-instead of `factory.deploy([])`.
-
-## Run a single test
+## Attach To An Existing Deployment
 
 ```bash
-gltest tests/integration/test_crypto_oracle_consensus.py::test_request_analysis_runs_consensus -v -s --network studionet
+set CRYPTO_ORACLE_ADDRESS=0x...
+gltest tests/integration/ -v -s --network testnet_bradbury
 ```
+
+When `CRYPTO_ORACLE_ADDRESS` is set, tests attach to that address instead of
+deploying a fresh contract.
+
+## Covered Smoke Paths
+
+- owner initialization
+- `request_analysis(coin_id, symbol, market_snapshot_json)` creates a thesis
+- one `monitor_batch(run_id, coins_snapshot_json)` transaction records 10
+  per-coin run results

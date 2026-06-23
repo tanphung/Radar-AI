@@ -21,14 +21,9 @@ function readLastSeen(): number {
 
 export function AlertBell() {
   const { data: alerts = [] } = useAlerts();
-  const [lastSeen, setLastSeen] = useState<number>(0);
+  const [lastSeen, setLastSeen] = useState<number>(() => readLastSeen());
   const [open, setOpen] = useState<boolean>(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
-
-  // Initial localStorage sync on mount.
-  useEffect(() => {
-    setLastSeen(readLastSeen());
-  }, []);
 
   // Click-outside to close.
   useEffect(() => {
@@ -98,13 +93,13 @@ export function AlertBell() {
           </div>
           {recent.length === 0 ? (
             <div className="px-3 py-6 text-center text-sm text-muted-foreground">
-              No alerts right now. The cron checks every 2 hours.
+              No alerts right now. The monitor checks every 4 hours.
             </div>
           ) : (
             <ul className="flex max-h-96 flex-col gap-2 overflow-y-auto p-2">
               {recent.map((alert) => (
                 <li key={alert.alertId}>
-                  <AlertItem alert={alert} />
+                  <AlertItem alert={alert} compact />
                 </li>
               ))}
             </ul>

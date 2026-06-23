@@ -2,6 +2,7 @@
 
 import { Suspense, useMemo } from "react";
 
+import { MarketNewsPanel } from "@/components/alerts/MarketNewsPanel";
 import { CoinTable } from "@/components/dashboard/CoinTable";
 import { FilterBar } from "@/components/dashboard/FilterBar";
 import { useDashboardFilters } from "@/components/dashboard/useDashboardFilters";
@@ -44,6 +45,7 @@ function Dashboard() {
 
   return (
     <>
+      <MarketNewsPanel />
       <FilterBar />
       <CoinTable
         coins={visible}

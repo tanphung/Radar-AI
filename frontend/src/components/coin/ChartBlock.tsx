@@ -96,8 +96,8 @@ export function ChartBlock({ id, positive }: Props) {
       <div className="relative h-80 w-full overflow-hidden rounded-md border border-border bg-card">
         <div ref={containerRef} className="absolute inset-0" />
         {error && (
-          <div className="absolute inset-0 flex items-center justify-center text-sm text-red-400">
-            Failed to load chart — {error.message}
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+            Chart data unavailable right now.
           </div>
         )}
         {isLoading && !data && (

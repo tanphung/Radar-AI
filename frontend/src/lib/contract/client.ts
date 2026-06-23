@@ -15,7 +15,14 @@ const RAW_NETWORK = (
   process.env.NEXT_PUBLIC_GENLAYER_NETWORK ?? "studionet"
 ).toLowerCase();
 const RAW_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS ?? "";
+const RETIRED_ADDRESSES = new Set(
+  (process.env.NEXT_PUBLIC_RETIRED_CONTRACT_ADDRESSES ?? "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean),
+);
 const FORCE_MOCK = process.env.NEXT_PUBLIC_MOCK_CONTRACT === "1";
+const ADDRESS_STORAGE_KEY = "cryptolens.contractAddress";
 
 const CHAINS = {
   studionet,
@@ -34,12 +41,28 @@ function isValidAddress(value: string): value is `0x${string}` {
   return /^0x[0-9a-fA-F]{40}$/.test(value);
 }
 
-export function useRealContract(): boolean {
-  return !FORCE_MOCK && isValidAddress(RAW_ADDRESS);
+export function isRealContractEnabled(): boolean {
+  return !FORCE_MOCK && isValidAddress(getInitialContractAddress() ?? "");
 }
 
 export function getContractAddress(): `0x${string}` | null {
-  return isValidAddress(RAW_ADDRESS) ? (RAW_ADDRESS as `0x${string}`) : null;
+  const address = getInitialContractAddress();
+  return isValidAddress(address ?? "") ? (address as `0x${string}`) : null;
+}
+
+export function getInitialContractAddress(): string | null {
+  if (!isValidAddress(RAW_ADDRESS)) return null;
+  if (typeof window === "undefined") return RAW_ADDRESS;
+  const saved = window.localStorage.getItem(ADDRESS_STORAGE_KEY);
+  if (
+    !saved ||
+    !isValidAddress(saved) ||
+    RETIRED_ADDRESSES.has(saved.toLowerCase())
+  ) {
+    window.localStorage.setItem(ADDRESS_STORAGE_KEY, RAW_ADDRESS);
+    return RAW_ADDRESS;
+  }
+  return saved;
 }
 
 /** Read-only client. Safe to call from server or browser. */

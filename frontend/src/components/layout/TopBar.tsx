@@ -21,7 +21,7 @@ export function TopBar() {
   const [address, setAddress] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string>("");
-  const [walletReady, setWalletReady] = useState(false);
+  const [walletReady, setWalletReady] = useState(() => isWalletInstalled());
 
   const loadWatchlist = useWatchlistStore((s) => s.load);
   const resetWatchlist = useWatchlistStore((s) => s.reset);
@@ -30,7 +30,6 @@ export function TopBar() {
   // until at least one wallet is announced so the button does not appear
   // disabled forever in those cases.
   useEffect(() => {
-    setWalletReady(isWalletInstalled());
     const unsubscribe = subscribeToWalletDiscovery(() => setWalletReady(true));
     return unsubscribe;
   }, []);

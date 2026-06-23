@@ -13,6 +13,7 @@ export default function Page() {
   useBinanceTickerInit(coins);
   const coinIds = useWatchlistStore((s) => s.coinIds);
   const loaded = useWatchlistStore((s) => s.loaded);
+  const signedIn = useWatchlistStore((s) => s.signedIn);
 
   const visible = useMemo(() => {
     if (!coins) return undefined;
@@ -31,7 +32,7 @@ export default function Page() {
         </p>
       </header>
       {showEmpty ? (
-        <EmptyState signedIn={loaded} />
+        <EmptyState signedIn={signedIn} />
       ) : (
         <CoinTable
           coins={visible}

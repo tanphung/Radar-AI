@@ -1,0 +1,12 @@
+[
+  { "id": "bitcoin", "symbol": "BTC" },
+  { "id": "ethereum", "symbol": "ETH" },
+  { "id": "binancecoin", "symbol": "BNB" },
+  { "id": "ripple", "symbol": "XRP" },
+  { "id": "solana", "symbol": "SOL" },
+  { "id": "dogecoin", "symbol": "DOGE" },
+  { "id": "cardano", "symbol": "ADA" },
+  { "id": "chainlink", "symbol": "LINK" },
+  { "id": "avalanche-2", "symbol": "AVAX" },
+  { "id": "sui", "symbol": "SUI" }
+]
